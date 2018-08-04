@@ -145,7 +145,7 @@ router.post('/usuario', (req, res, next) => {
     [data.nome, data.email, data.data_nasc, data.password, data.telefone]);
 
     // SQL Query > Select Data
-    //const query = client.query('SELECT * FROM usuario ORDER BY id ASC');
+    const query = client.query('SELECT * FROM usuario ORDER BY id ASC');
     
     // Stream results back one row at a time
     query.on('row', (row) => {
