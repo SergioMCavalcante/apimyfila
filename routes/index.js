@@ -143,8 +143,10 @@ router.post('/usuario', (req, res, next) => {
     // SQL Query > Insert Data
     client.query('INSERT INTO usuario (nome, email, data_nasc, password, telefone) values($1, $2, $3, $4, $5)',
     [data.nome, data.email, data.data_nasc, data.password, data.telefone]);
+
     // SQL Query > Select Data
     //const query = client.query('SELECT * FROM usuario ORDER BY id ASC');
+    
     // Stream results back one row at a time
     query.on('row', (row) => {
       results.push(row);
@@ -152,7 +154,7 @@ router.post('/usuario', (req, res, next) => {
     // After all data is returned, close connection and return results
     query.on('end', () => {
       done();
-      return res.status(9999).json(results);
+      return res.json(results);
     });
   });
 });
