@@ -165,9 +165,9 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
 
   const results = [];
   // Grab data from the URL parameters
-  const id = req.params.todo_id;
+  // const id = req.params.id;
   // Grab data from http request
-  const data = {nome: req.body.nome, email: req.body.email, data_nasc: req.body.data_nasc, 
+  const data = {id: req.body.id, nome: req.body.nome, email: req.body.email, data_nasc: req.body.data_nasc, 
       password: req.body.password, telefone: req.body.telefone};
   // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
@@ -180,8 +180,9 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
     // SQL Query > Update Data
     //client.query('UPDATE items SET text=($1), complete=($2) WHERE id=($3)',
     //[data.text, data.complete, id]);
+    console.log(data.id + " " + data.nome + " " + data.email + " " + data.data_nasc + " " + data.password + " " + data.telefone)
     client.query('UPDATE usuario SET nome=($1), email=($2), data_nasc=($3), password=($4), telefone=($5) WHERE id=($6)',
-    [data.nome, data.email, data.data_nasc, data.password, data.telefone, id]);
+    [data.nome, data.email, data.data_nasc, data.password, data.telefone, data.id]);
     // SQL Query > Select Data
     const query = client.query("SELECT * FROM usuario ORDER BY id ASC");
     // Stream results back one row at a time
