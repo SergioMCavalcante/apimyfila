@@ -143,8 +143,10 @@ router.post('/usuario', (req, res, next) => {
     // SQL Query > Insert Data
     client.query('INSERT INTO usuario (nome, email, data_nasc, password, telefone) values($1, $2, $3, $4, $5)',
     [data.nome, data.email, data.data_nasc, data.password, data.telefone]);
+
     // SQL Query > Select Data
-    //const query = client.query('SELECT * FROM usuario ORDER BY id ASC');
+    const query = client.query('SELECT * FROM usuario ORDER BY id ASC');
+    
     // Stream results back one row at a time
     query.on('row', (row) => {
       results.push(row);
@@ -152,7 +154,7 @@ router.post('/usuario', (req, res, next) => {
     // After all data is returned, close connection and return results
     query.on('end', () => {
       done();
-      return res.status(9999).json(results);
+      return res.json(results);
     });
   });
 });
@@ -165,7 +167,7 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
   // Grab data from the URL parameters
   const id = req.params.usuario_id;
   // Grab data from http request
-  const data = {nome: req.body.nome, email: req.body.email, data_nasc: req.body.data_nasc, 
+  const data = {id: req.body.id, nome: req.body.nome, email: req.body.email, data_nasc: req.body.data_nasc, 
       password: req.body.password, telefone: req.body.telefone};
   // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
@@ -178,8 +180,9 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
     // SQL Query > Update Data
     //client.query('UPDATE items SET text=($1), complete=($2) WHERE id=($3)',
     //[data.text, data.complete, id]);
+    console.log(data.id + " " + data.nome + " " + data.email + " " + data.data_nasc + " " + data.password + " " + data.telefone)
     client.query('UPDATE usuario SET nome=($1), email=($2), data_nasc=($3), password=($4), telefone=($5) WHERE id=($6)',
-    [data.nome, data.email, data.data_nasc, data.password, data.telefone, id]);
+    [data.nome, data.email, data.data_nasc, data.password, data.telefone, data.id]);
     // SQL Query > Select Data
     const query = client.query("SELECT * FROM usuario ORDER BY id ASC");
     // Stream results back one row at a time
