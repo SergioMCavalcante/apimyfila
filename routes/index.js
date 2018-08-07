@@ -163,7 +163,7 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
 
   const results = [];
   // Grab data from the URL parameters
-  const id = req.params.todo_id;
+  const id = req.params.usuario_id;
   // Grab data from http request
   const data = {nome: req.body.nome, email: req.body.email, data_nasc: req.body.data_nasc, 
       password: req.body.password, telefone: req.body.telefone};
@@ -198,7 +198,7 @@ router.put('/usuario/:usuario_id', (req, res, next) => {
 router.delete('/usuario/:usuario_id', (req, res, next) => {
   const results = [];
   // Grab data from the URL parameters
-  const id = req.params.todo_id;
+  const id = req.params.usuario_id;
 
   console.log("delete ID API: " + id);
   // Get a Postgres client from the connection pool
