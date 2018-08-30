@@ -105,7 +105,7 @@ router.get('/usuario/:usuario_id', (req, res, next) => {
   // Grab data from the URL parameters
   const id = req.params.usuario_id;
 
-  console.log("ID API: " + id);
+  console.log("USUARIO ID API: " + id);
   // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
     // Handle connection errors
@@ -127,6 +127,70 @@ router.get('/usuario/:usuario_id', (req, res, next) => {
     });
   });
 });
+
+router.get('/usuario_agenda1/:usuario_id', (req, res, next) => {
+
+  console.log("Buscando total de agendas de 1 usuario");
+
+  const results = [];
+  // Grab data from the URL parameters
+  const id = req.params.usuario_id;
+
+  console.log("USUARIO ID API (1): " + id);
+  // Get a Postgres client from the connection pool
+  pg.connect(connectionString, (err, client, done) => {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({success: false, data: err});
+    }
+    // SQL Query > Select Data
+    const query = client.query('SELECT u.*,  COUNT(*) as Tot_Agendas FROM usuario u, mov_agenda mva WHERE u.id = mva.id_usuario and data_movimento >= current_date and u.id=($1) Group by u.id Order by 2', [id]);
+    // Stream results back one row at a time
+    query.on('row', (row) => {
+      results.push(row);
+    });
+    // After all data is returned, close connection and return results
+    query.on('end', () => {
+      done();
+      return res.json(results);
+    });
+  });
+});
+
+router.get('/usuario_agenda2/:usuario_id', (req, res, next) => {
+
+  console.log("Buscando todas as agendas de 1 usuario");
+
+  const results = [];
+  // Grab data from the URL parameters
+  const id = req.params.usuario_id;
+
+  console.log("USUARIO ID API (2): " + id);
+  // Get a Postgres client from the connection pool
+  pg.connect(connectionString, (err, client, done) => {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({success: false, data: err});
+    }
+    // SQL Query > Select Data
+    const query = client.query('SELECT u.id as u_id, u.nome as u_nome, mva.id as mov_id, mva.id_profissional, mva.data_movimento, mva.hora_atendimento, p1."Nome" as p_nome, p2."Descricao" FROM usuario u, profissional p1, mov_agenda mva, profissao p2 WHERE u.id=($1) and mva.id_usuario=u.id and data_movimento >= current_date and mva.id_profissional = p1.id and p1.id_profissao = p2.id_profissao Order by 5, 6;', [id]);
+        
+    // Stream results back one row at a time
+    query.on('row', (row) => {
+      results.push(row);
+    });
+    // After all data is returned, close connection and return results
+    query.on('end', () => {
+      done();
+      return res.json(results);
+    });
+  });
+});
+
 
 router.post('/usuario', (req, res, next) => {
 
@@ -246,7 +310,7 @@ router.get('/agenda/:prof_id', (req, res, next) => {
       return res.status(500).json({success: false, data: err});
     }
     // SQL Query > Select Data
-    const query = client.query("SELECT * FROM generate_series((current_date), (current_date) + INTERVAL'1 month' - INTERVAL'1 day', INTERVAL'1 day') AS datadisp WHERE EXTRACT(ISODOW FROM datadisp) in (SELECT distinct dia_semana_agenda FROM agenda where id_profissional=($1));", [id]);
+    const query = client.query("SELECT * FROM generate_series((current_date), (current_date) + INTERVAL'1 month' - INTERVAL'1 day', INTERVAL'1 day') AS datadisp, EXTRACT(ISODOW FROM datadisp) AS diasemana WHERE EXTRACT(ISODOW FROM datadisp) in (SELECT distinct dia_semana_agenda FROM agenda where id_profissional=($1));", [id]);
       
     //("SELECT  * FROM generate_series(date_trunc('month',current_date), date_trunc('month',current_date) + INTERVAL'1 month' - INTERVAL'1 day', INTERVAL'1 day') AS dias WHERE EXTRACT(ISODOW FROM dias) in (SELECT distinct dia_semana_agenda FROM agenda where id_profissional=($1);", [id]);
    
@@ -264,17 +328,17 @@ router.get('/agenda/:prof_id', (req, res, next) => {
   });
 });
 
-router.get('/agenda_horas/:idProf', (req, res, next) => {
+router.get('/agenda_horas/:idProfSelec&:diaSem&:dataSelec', (req, res, next) => {
 
   console.log("Buscando agenda (Horas)");
 
   const results = [];
-  // Grab data from the URL parameters
-  const id = req.params.idProf;
-  // Grab data from http request
-  //const data = {idProf: req.body.idProf, dataSelec: req.body.dataSelec, diaSem: req.body.diaSem};
-
-  console.log("API ID agenda horas: " + id);
+  //const dataSelec = req.params.dataSelec;
+  const idProf = req.params.idProfSelec;
+  const diaSemana = req.params.diaSem; 
+  const dataSelec = req.params.dataSelec; 
+  
+  console.log("API agenda horas: " + idProf + ' ' + diaSemana + ' ' + dataSelec);
 
   // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
@@ -285,7 +349,7 @@ router.get('/agenda_horas/:idProf', (req, res, next) => {
       return res.status(500).json({success: false, data: err});
     }
     // SQL Query > Select Data
-    const query = client.query("SELECT hora_agenda FROM agenda WHERE id_profissional=($1)", [id]);
+    const query = client.query("SELECT * FROM agenda WHERE id_profissional=($1) and dia_semana_agenda=($2) and hora_agenda not in (SELECT hora_atendimento FROM mov_agenda WHERE data_movimento=($3) and id_profissional=($1));", [idProf, diaSemana, dataSelec]);
       
     // Stream results back one row at a time
     query.on('row', (row) => {
@@ -334,6 +398,35 @@ router.post('/mov_agenda', (req, res, next) => {
   });
 });
 
+router.delete('/mov_agenda/:mov_id', (req, res, next) => {
+  const results = [];
+  // Grab data from the URL parameters
+  const id = req.params.mov_id;
+
+  console.log("Mov Agenda delete ID API: " + id);
+  // Get a Postgres client from the connection pool
+  pg.connect(connectionString, (err, client, done) => {
+    // Handle connection errors
+    if(err) {
+      done();
+      console.log(err);
+      return res.status(500).json({success: false, data: err});
+    }
+    // SQL Query > Delete Data
+    client.query('DELETE FROM mov_agenda WHERE id=($1)', [id]);
+    
+    var query = client.query('SELECT * FROM mov_agenda ORDER BY id ASC');
+    // Stream results back one row at a time
+    query.on('row', (row) => {
+      results.push(row);
+    });
+    // After all data is returned, close connection and return results
+    query.on('end', () => {
+      done();
+      return res.json(results);
+    });
+  });
+});
 
 
 module.exports = router;

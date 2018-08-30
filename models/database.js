@@ -1,5 +1,5 @@
 const pg = require('pg');
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postg2018@localhost:5432/myfila';
+const connectionString = process.env.DATABASE_URL || 'postgres://postgres:1234@localhost:5432/myfila';
 
 const client = new pg.Client(connectionString);
 client.connect();
